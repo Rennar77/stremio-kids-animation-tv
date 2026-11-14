@@ -3,7 +3,6 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 7000;
 
-// Both Kids and Animation playlists from iptv-org
 const PLAYLIST_URLS = [
     'https://iptv-org.github.io/iptv/categories/kids.m3u',
     'https://iptv-org.github.io/iptv/categories/animation.m3u'
@@ -11,9 +10,9 @@ const PLAYLIST_URLS = [
 
 const MANIFEST = {
     id: 'community.local.kidsanimationtv',
-    version: '1.1.0',
+    version: '1.2.0',
     name: 'Kids & Animation Live TV',
-    description: 'Custom cloud Stremio addon for kids and animation channels',
+    description: 'Secure HTTPS cloud addon optimized for Smart TVs',
     resources: ['catalog', 'meta', 'stream'],
     types: ['tv'],
     catalogs: [
@@ -47,7 +46,8 @@ async function refreshChannels() {
                         name: name || 'Unknown Channel',
                         poster: logoMatch ? logoMatch[1] : 'https://via.placeholder.com/300x450.png?text=Kids+TV'
                     };
-                } else if (line.startsWith('http') && currentChannel.name) {
+                } else if (line.startsWith('https://') && currentChannel.name) {
+                    // STRICT HTTPS FILTER: Blocks insecure HTTP streams that Tizen rejects
                     const slug = currentChannel.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                     allChannels.push({
                         id: `${slug}-${allChannels.length}`,
@@ -59,14 +59,13 @@ async function refreshChannels() {
                 }
             }
         }
-        cachedChannels = allChannels.slice(0, 350); // Combined channel cap
-        console.log(`[INIT] Successfully loaded ${cachedChannels.length} kids & animation channels.`);
+        cachedChannels = allChannels.slice(0, 350);
+        console.log(`[INIT] Loaded ${cachedChannels.length} secure HTTPS channels.`);
     } catch (error) {
         console.error('[PLAYLIST ERROR]:', error.message);
     }
 }
 
-// Fetch channels on startup and every 2 hours
 refreshChannels();
 setInterval(refreshChannels, 2 * 60 * 60 * 1000);
 
@@ -82,7 +81,7 @@ app.get('/catalog/tv/kids_animation_tv.json', (req, res) => {
         type: 'tv',
         name: channel.name,
         poster: channel.poster,
-        description: `Live broadcast: ${channel.name}`
+        description: `Live secure broadcast: ${channel.name}`
     }));
     res.json({ metas });
 });
@@ -99,7 +98,7 @@ app.get('/meta/tv/:id.json', (req, res) => {
                 type: 'tv',
                 name: found.name,
                 poster: found.poster,
-                description: `Live broadcast stream for ${found.name}`
+                description: `Live secure broadcast stream for ${found.name}`
             }
         });
     }
@@ -115,7 +114,7 @@ app.get('/stream/tv/:id.json', (req, res) => {
         return res.json({
             streams: [
                 {
-                    title: `${found.name} (Direct HD)`,
+                    title: `${found.name} (Secure HD)`,
                     url: found.url
                 }
             ]
@@ -125,5 +124,5 @@ app.get('/stream/tv/:id.json', (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Addon running on port ${PORT}`);
+    console.log(`Secure addon running on port ${PORT}`);
 });
