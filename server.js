@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const crypto = require('crypto');
 const app = express();
 const PORT = process.env.PORT || 7000;
 
@@ -10,9 +11,9 @@ const PLAYLIST_URLS = [
 
 const MANIFEST = {
     id: 'community.local.kidsanimationtv',
-    version: '1.2.0',
+    version: '1.3.0',
     name: 'Kids & Animation Live TV',
-    description: 'Secure HTTPS cloud addon optimized for Smart TVs',
+    description: 'Stable HTTPS cloud addon with persistent IDs',
     resources: ['catalog', 'meta', 'stream'],
     types: ['tv'],
     catalogs: [
@@ -47,10 +48,10 @@ async function refreshChannels() {
                         poster: logoMatch ? logoMatch[1] : 'https://via.placeholder.com/300x450.png?text=Kids+TV'
                     };
                 } else if (line.startsWith('https://') && currentChannel.name) {
-                    // STRICT HTTPS FILTER: Blocks insecure HTTP streams that Tizen rejects
-                    const slug = currentChannel.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                    // Generate a permanent unique ID based on the stream URL itself
+                    const stableId = crypto.createHash('md5').update(line).digest('hex').substring(0, 10);
                     allChannels.push({
-                        id: `${slug}-${allChannels.length}`,
+                        id: stableId,
                         name: currentChannel.name,
                         poster: currentChannel.poster,
                         url: line
@@ -60,7 +61,7 @@ async function refreshChannels() {
             }
         }
         cachedChannels = allChannels.slice(0, 350);
-        console.log(`[INIT] Loaded ${cachedChannels.length} secure HTTPS channels.`);
+        console.log(`[INIT] Loaded ${cachedChannels.length} stable HTTPS channels.`);
     } catch (error) {
         console.error('[PLAYLIST ERROR]:', error.message);
     }
@@ -124,5 +125,5 @@ app.get('/stream/tv/:id.json', (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Secure addon running on port ${PORT}`);
+    console.log(`Stable addon running on port ${PORT}`);
 });
