@@ -47,7 +47,7 @@ async function refreshChannels() {
                         name: name || 'Unknown Channel',
                         poster: logoMatch ? logoMatch[1] : 'https://via.placeholder.com/300x450.png?text=Kids+TV'
                     };
-                } else if (line.startsWith('https://') && currentChannel.name) {
+                } else if ((line.startsWith('http://') || line.startsWith('https://')) && currentChannel.name) {
                     // Generate a permanent unique ID based on the stream URL itself
                     const stableId = crypto.createHash('md5').update(line).digest('hex').substring(0, 10);
                     allChannels.push({
